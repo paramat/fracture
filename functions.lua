@@ -97,3 +97,13 @@ function fracture_cactus(x, y, z, area, data)
 	end
 	end
 end
+
+-- Singlenode option
+
+local SINGLENODE = false
+
+if SINGLENODE then
+	minetest.register_on_mapgen_init(function(mgparams)
+		minetest.set_mapgen_params({mgname="singlenode", water_level=-32000})
+	end)
+end
