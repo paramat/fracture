@@ -1,15 +1,7 @@
--- fracture 0.1.2 by paramat
+-- fracture 0.1.3 by paramat
 -- For latest stable Minetest and back to 0.4.8
 -- Depends default
 -- License: code WTFPL
-
--- 0.1.2
--- singlenode option
--- ores
--- fissures
--- cloud in odd chunk layers
--- noise squash of 128:256
--- mod dirt nodes
 
 -- Parameters
 
@@ -17,15 +9,16 @@ local YMIN = 208
 local YMAX = 33000
 local DENOFF = -0.4 -- Density offset, -2 to 2, 0 = equal volumes of air and floatland
 local TSTONE = 0.03 -- Stone density threshold, controls average depth of stone below surface
+local TVOID = 0.3 -- Central void threshold, controls size
 local TFIS = 0.02 -- Fissure threshold, controls width
-local ORECHA = 1 / (5 * 5 * 5) -- Ore chance per stone node
+local ORECHA = 1 / 5 ^ 3 -- Ore chance per stone node
 
 local BLEND = 0.03 -- Controls biome blend distance
 local PINCHA = 17 * 17 -- Pine chance 1/x chance per surface node
 local APPCHA = 13 * 13 -- Appletree
 local CACCHA = 31 * 31 -- Cactus
-local TCAC = 0.1 -- Cactus threshold, width of cactus areas
-local TFOR = 0.1 -- Forest threshold, width of forest paths/clearings
+local TCAC = 0.2 -- Cactus threshold, width of cactus areas
+local TFOR = 0.2 -- Forest threshold, width of forest paths/clearings
 
 -- 3D noise for terrain
 
@@ -55,9 +48,9 @@ local np_fissure = {
 	offset = 0,
 	scale = 1,
 	spread = {x=128, y=256, z=128},
-	seed = 593,
-	octaves = 4,
-	persist = 0.5
+	seed = 2001,
+	octaves = 5,
+	persist = 0.6
 }
 
 -- 3D noise for biomes
@@ -88,7 +81,7 @@ local np_cloud = {
 	offset = 0,
 	scale = 1,
 	spread = {x=26, y=26, z=26},
-	seed = 593,
+	seed = 1313131313,
 	octaves = 2,
 	persist = 0.67
 }
@@ -266,16 +259,16 @@ minetest.register_on_generated(function(minp, maxp, seed)
 			local n_biome = nvals_biome[nixyz]
 			local biome = false
 			if n_biome > 0.4 + (math.random() - 0.5) * BLEND then
-				biome = 3
+				biome = 3 -- desert
 			elseif n_biome < -0.4 + (math.random() - 0.5) * BLEND then
-				biome = 1
+				biome = 1 -- taiga
 			else
-				biome = 2
+				biome = 2 -- forest / grassland
 			end
 			
 			local n_fissure = nvals_fissure[nixyz]
 			local nofis = false
-			if math.abs(n_fissure) > TFIS then
+			if math.abs(n_fissure) > TFIS and density < TVOID then
 				nofis = true
 			end
 			
@@ -290,12 +283,18 @@ minetest.register_on_generated(function(minp, maxp, seed)
 				else
 					local nodename = minetest.get_node({x=x,y=y,z=z}).name
 					if nodename == "fracture:stone"
-					or nodename == "fracture:redstone"
-					or nodename == "default:dirt"
-					or nodename == "default:dirt_with_grass"
-					or nodename == "default:dirt_with_snow"
+					or nodename == "fracture:desertstone"
+					or nodename == "fracture:dirt"
+					or nodename == "fracture:grass"
+					or nodename == "fracture:dirtsnow"
 					or nodename == "default:snowblock"
-					or nodename == "default:desert_sand" then
+					or nodename == "default:desert_sand"
+					or nodename == "default:stone_with_diamond"
+					or nodename == "default:stone_with_mese"
+					or nodename == "default:stone_with_gold"
+					or nodename == "default:stone_with_copper"
+					or nodename == "default:stone_with_iron"
+					or nodename == "default:stone_with_coal" then
 						stable[si] = 2
 					else
 						stable[si] = 0
