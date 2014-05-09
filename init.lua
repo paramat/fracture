@@ -1,11 +1,11 @@
--- fracture 0.1.3 by paramat
+-- fracture 0.1.4 by paramat
 -- For latest stable Minetest and back to 0.4.8
 -- Depends default
 -- License: code WTFPL
 
 -- Parameters
 
-local YMIN = 208
+local YMIN = -33000 -- Set to -33000 when using singlenode option
 local YMAX = 33000
 local DENOFF = -0.4 -- Density offset, -2 to 2, 0 = equal volumes of air and floatland
 local TSTONE = 0.03 -- Stone density threshold, controls average depth of stone below surface
@@ -91,102 +91,7 @@ local np_cloud = {
 fracture = {}
 
 dofile(minetest.get_modpath("fracture").."/functions.lua")
-
--- Nodes
-
-minetest.register_node("fracture:stone", {
-	description = "FR Stone",
-	tiles = {"default_stone.png"},
-	groups = {cracky=3},
-	drop = "default:stone",
-	sounds = default.node_sound_stone_defaults(),
-})
-
-minetest.register_node("fracture:desertstone", {
-	description = "FR Desert Stone",
-	tiles = {"default_desert_stone.png"},
-	groups = {cracky=3},
-	drop = "default:desert_stone",
-	sounds = default.node_sound_stone_defaults(),
-})
-
-minetest.register_node("fracture:dirt", {
-	description = "Dirt",
-	tiles = {"default_dirt.png"},
-	is_ground_content = false,
-	groups = {crumbly=3,soil=1},
-	drop = "default:dirt",
-	sounds = default.node_sound_dirt_defaults(),
-})
-
-minetest.register_node("fracture:dirtsnow", {
-	description = "Dirt with Snow",
-	tiles = {"default_snow.png", "default_dirt.png", "default_snow.png"},
-	is_ground_content = true,
-	groups = {crumbly=3},
-	drop = "default:dirt",
-	sounds = default.node_sound_dirt_defaults({
-		footstep = {name="default_snow_footstep", gain=0.25},
-	}),
-})
-
-minetest.register_node("fracture:grass", {
-	description = "Grass",
-	tiles = {"default_grass.png", "default_dirt.png", "default_grass.png"},
-	is_ground_content = false,
-	groups = {crumbly=3,soil=1},
-	drop = "default:dirt",
-	sounds = default.node_sound_dirt_defaults({
-		footstep = {name="default_grass_footstep", gain=0.25},
-	}),
-})
-
-minetest.register_node("fracture:appleleaf", {
-	description = "Appletree Leaves",
-	drawtype = "allfaces_optional",
-	visual_scale = 1.3,
-	tiles = {"default_leaves.png"},
-	paramtype = "light",
-	is_ground_content = false,
-	groups = {snappy=3, flammable=2},
-	sounds = default.node_sound_leaves_defaults(),
-})
-
-minetest.register_node("fracture:needles", {
-	description = "Pine Needles",
-	drawtype = "allfaces_optional",
-	visual_scale = 1.3,
-	tiles = {"fracture_needles.png"},
-	paramtype = "light",
-	is_ground_content = false,
-	groups = {snappy=3},
-	sounds = default.node_sound_leaves_defaults(),
-})
-
-minetest.register_node("fracture:cactus", {
-	description = "Cactus",
-	tiles = {"default_cactus_top.png", "default_cactus_top.png", "default_cactus_side.png"},
-	paramtype2 = "facedir",
-	is_ground_content = false,
-	groups = {snappy=1, choppy=3, flammable=2},
-	drop = "default:cactus",
-	sounds = default.node_sound_wood_defaults(),
-	on_place = minetest.rotate_node
-})
-
-minetest.register_node("fracture:cloud", {
-	description = "Cloud",
-	drawtype = "glasslike",
-	tiles = {"fracture_cloud.png"},
-	paramtype = "light",
-	is_ground_content = false,
-	sunlight_propagates = true,
-	walkable = false,
-	pointable = false,
-	diggable = false,
-	buildable_to = true,
-	post_effect_color = {a=63, r=241, g=248, b=255},
-})
+dofile(minetest.get_modpath("fracture").."/nodes.lua")
 
 -- On generated function
 
@@ -300,8 +205,8 @@ minetest.register_on_generated(function(minp, maxp, seed)
 						stable[si] = 0
 					end
 				end
-			elseif y >= y0 and y <= y1 then -- stone, ores
-				if nofis and density >= TSTONE then
+			elseif y >= y0 and y <= y1 then
+				if nofis and density >= TSTONE then -- stone, ores
 					if biome == 3 then
 						data[vi] = c_destone
 					elseif math.random() < ORECHA then
@@ -356,13 +261,13 @@ minetest.register_on_generated(function(minp, maxp, seed)
 					end
 					stable[si] = 0
 					under[si] = 0
-				elseif density < 0 and y == y1 - 1 and chuy ~= 1 -- clouds, not underground, not at y = 126
+				elseif density < 0 and y == y1 - 1 -- clouds, not underground
 				and chuy / 2 ~= math.floor(chuy / 2) then -- every odd chunk layer
 					local xrq = 16 * math.floor((x - x0) / 16)
 					local zrq = 16 * math.floor((z - z0) / 16)
 					local yrq = 79
 					local qixyz = zrq * 6400 + yrq * 80 + xrq + 1
-					if math.abs(nvals_flora[qixyz]) < 0.2
+					if math.abs(nvals_flora[qixyz]) < 0.1
 					and nvals_cloud[qixyz] >= 0 then
 						data[vi] = c_cloud
 					end

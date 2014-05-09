@@ -100,10 +100,98 @@ end
 
 -- Singlenode option
 
-local SINGLENODE = false
+local SINGLENODE = true
 
 if SINGLENODE then
 	minetest.register_on_mapgen_init(function(mgparams)
 		minetest.set_mapgen_params({mgname="singlenode", water_level=-32000})
+	end)
+	
+	minetest.register_on_joinplayer(function(player)
+		minetest.setting_set("enable_clouds", "false")
+	end)
+
+	-- Spawn player
+
+	function spawnplayer(player)
+		local DENOFF = -0.4
+		local TSTONE = 0.03
+		local xsp
+		local ysp
+		local zsp
+		local np_terrain = {
+			offset = 0,
+			scale = 1,
+			spread = {x=256, y=128, z=256},
+			seed = 593,
+			octaves = 5,
+			persist = 0.67
+		}
+		local np_terralt = {
+			offset = 0,
+			scale = 1,
+			spread = {x=207, y=104, z=207},
+			seed = 593,
+			octaves = 5,
+			persist = 0.67
+		}
+		for chunk = 1, 64 do
+			print ("[fracture] searching for spawn "..chunk)
+			local x0 = 80 * math.random(-16, 16) - 32
+			local z0 = 80 * math.random(-16, 16) - 32
+			local y0 = 80 * math.random(-16, 16) - 32
+			local x1 = x0 + 79
+			local z1 = z0 + 79
+			local y1 = y0 + 79
+	
+			local sidelen = 80
+			local chulens = {x=sidelen, y=sidelen, z=sidelen}
+			local minposxyz = {x=x0, y=y0, z=z0}
+
+			local nvals_terrain = minetest.get_perlin_map(np_terrain, chulens):get3dMap_flat(minposxyz)
+			local nvals_terralt = minetest.get_perlin_map(np_terralt, chulens):get3dMap_flat(minposxyz)
+	
+			local nixyz = 1
+			local stable = {}
+			for z = z0, z1 do
+				for y = y0, y1 do
+					for x = x0, x1 do
+						local si = x - x0 + 1
+						local n_terrain = nvals_terrain[nixyz]
+						local n_terralt = nvals_terralt[nixyz]
+						local density = (n_terrain + n_terralt) * 0.5 + DENOFF
+						if density >= TSTONE then
+							stable[si] = true
+						elseif stable[si] and density < 0 then
+							ysp = y + 1
+							xsp = x
+							zsp = z
+							break
+						end
+						nixyz = nixyz + 1
+					end
+					if ysp then
+						break
+					end
+				end
+				if ysp then
+					break
+				end
+			end
+			if ysp then
+				break
+			end
+		end
+		print ("[fracture] spawn player ("..xsp.." "..ysp.." "..zsp..")")
+		player:setpos({x=xsp, y=ysp, z=zsp})
+	end
+
+	minetest.register_on_newplayer(function(player)
+		spawnplayer(player)
+	end)
+
+	minetest.register_on_respawnplayer(function(player)
+		spawnplayer(player)
+		return true
 	end)
 end
