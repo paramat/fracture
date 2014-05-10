@@ -21,17 +21,27 @@ minetest.register_node("fracture:dirt", {
 	groups = {crumbly=3,soil=1},
 	drop = "default:dirt",
 	sounds = default.node_sound_dirt_defaults(),
+	soil = {
+		base = "fracture:dirt",
+		dry = "farming:soil",
+		wet = "farming:soil_wet"
+	}
 })
 
 minetest.register_node("fracture:dirtsnow", {
 	description = "Dirt with Snow",
 	tiles = {"default_snow.png", "default_dirt.png", "default_snow.png"},
 	is_ground_content = true,
-	groups = {crumbly=3},
+	groups = {crumbly=3,soil=1},
 	drop = "default:dirt",
 	sounds = default.node_sound_dirt_defaults({
 		footstep = {name="default_snow_footstep", gain=0.25},
 	}),
+	soil = {
+		base = "fracture:dirtsnow",
+		dry = "farming:soil",
+		wet = "farming:soil_wet"
+	}
 })
 
 minetest.register_node("fracture:grass", {
@@ -43,6 +53,11 @@ minetest.register_node("fracture:grass", {
 	sounds = default.node_sound_dirt_defaults({
 		footstep = {name="default_grass_footstep", gain=0.25},
 	}),
+	soil = {
+		base = "fracture:grass",
+		dry = "farming:soil",
+		wet = "farming:soil_wet"
+	}
 })
 
 minetest.register_node("fracture:appleleaf", {
