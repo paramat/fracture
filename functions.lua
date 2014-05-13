@@ -31,7 +31,7 @@ function fracture_appletree(x, y, z, area, data)
 end
 
 function fracture_snowypine(x, y, z, area, data)
-	local c_tree = minetest.get_content_id("default:tree")
+	local c_pinetree = minetest.get_content_id("fracture:pinetree")
 	local c_needles = minetest.get_content_id("fracture:needles")
 	local c_snowblock = minetest.get_content_id("default:snowblock")
 	for j = -4, 14 do
@@ -76,7 +76,7 @@ function fracture_snowypine(x, y, z, area, data)
 			end
 		end
 		local vi = area:index(x, y + j, z)
-		data[vi] = c_tree
+		data[vi] = c_pinetree
 	end
 	local vi = area:index(x, y + 15, z)
 	local via = area:index(x, y + 16, z)
@@ -98,6 +98,29 @@ function fracture_cactus(x, y, z, area, data)
 	end
 end
 
+function fracture_flower(data, vi)
+	local c_danwhi = minetest.get_content_id("flowers:dandelion_white")
+	local c_danyel = minetest.get_content_id("flowers:dandelion_yellow")
+	local c_rose = minetest.get_content_id("flowers:rose")
+	local c_tulip = minetest.get_content_id("flowers:tulip")
+	local c_geranium = minetest.get_content_id("flowers:geranium")
+	local c_viola = minetest.get_content_id("flowers:viola")
+	local rand = math.random(6)
+	if rand == 1 then
+		data[vi] = c_danwhi
+	elseif rand == 2 then
+		data[vi] = c_rose
+	elseif rand == 3 then
+		data[vi] = c_tulip
+	elseif rand == 4 then
+		data[vi] = c_danyel
+	elseif rand == 5 then
+		data[vi] = c_geranium
+	else
+		data[vi] = c_viola
+	end
+end
+
 -- Singlenode option
 
 local SINGLENODE = true
@@ -105,10 +128,6 @@ local SINGLENODE = true
 if SINGLENODE then
 	minetest.register_on_mapgen_init(function(mgparams)
 		minetest.set_mapgen_params({mgname="singlenode", water_level=-32000})
-	end)
-	
-	minetest.register_on_joinplayer(function(player)
-		minetest.setting_set("enable_clouds", "false")
 	end)
 
 	-- Spawn player
@@ -124,7 +143,7 @@ if SINGLENODE then
 			scale = 1,
 			spread = {x=256, y=128, z=256},
 			seed = 593,
-			octaves = 5,
+			octaves = 4,
 			persist = 0.67
 		}
 		local np_terralt = {
@@ -132,7 +151,7 @@ if SINGLENODE then
 			scale = 1,
 			spread = {x=207, y=104, z=207},
 			seed = 593,
-			octaves = 5,
+			octaves = 4,
 			persist = 0.67
 		}
 		for chunk = 1, 64 do

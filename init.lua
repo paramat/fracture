@@ -1,7 +1,14 @@
--- fracture 0.1.4 by paramat
+-- fracture 0.1.5 by paramat
 -- For latest stable Minetest and back to 0.4.8
 -- Depends default
 -- License: code WTFPL
+
+-- re-enable core clouds in singlenode mode
+-- add pinetree, pinewood, flowers, grasses
+-- remove flora noise
+-- 4 octaves, detail to 25n
+-- TODO
+-- saplings
 
 -- Parameters
 
@@ -9,16 +16,17 @@ local YMIN = -33000 -- Set to -33000 when using singlenode option
 local YMAX = 33000
 local DENOFF = -0.4 -- Density offset, -2 to 2, 0 = equal volumes of air and floatland
 local TSTONE = 0.03 -- Stone density threshold, controls average depth of stone below surface
-local TVOID = 0.3 -- Central void threshold, controls size
+local TVOID = 0.2 -- Central void threshold, controls size
 local TFIS = 0.02 -- Fissure threshold, controls width
 local ORECHA = 1 / 5 ^ 3 -- Ore chance per stone node
 
-local BLEND = 0.03 -- Controls biome blend distance
-local PINCHA = 17 * 17 -- Pine chance 1/x chance per surface node
-local APPCHA = 13 * 13 -- Appletree
-local CACCHA = 31 * 31 -- Cactus
-local TCAC = 0.2 -- Cactus threshold, width of cactus areas
-local TFOR = 0.2 -- Forest threshold, width of forest paths/clearings
+local BLEND = 0.02 -- Controls biome blend distance
+local PINCHA = 1 / 13 ^ 2 -- Pine chance 1/x chance per surface node
+local APPCHA = 1 / 13 ^ 2 -- Appletree
+local CACCHA = 1 / 61 ^ 2 -- Cactus
+local FLOCHA = 1 / 23 ^ 2 -- Random flower
+local GRACHA = 1 / 5 ^ 2 -- Grass_5
+local DRYCHA = 1 / 47 ^ 2 -- Dry shrub
 
 -- 3D noise for terrain
 
@@ -27,7 +35,7 @@ local np_terrain = {
 	scale = 1,
 	spread = {x=256, y=128, z=256},
 	seed = 593,
-	octaves = 5,
+	octaves = 4,
 	persist = 0.67
 }
 
@@ -38,7 +46,7 @@ local np_terralt = {
 	scale = 1,
 	spread = {x=207, y=104, z=207},
 	seed = 593,
-	octaves = 5,
+	octaves = 4,
 	persist = 0.67
 }
 
@@ -49,8 +57,8 @@ local np_fissure = {
 	scale = 1,
 	spread = {x=128, y=256, z=128},
 	seed = 2001,
-	octaves = 5,
-	persist = 0.6
+	octaves = 4,
+	persist = 0.5
 }
 
 -- 3D noise for biomes
@@ -58,20 +66,9 @@ local np_fissure = {
 local np_biome = {
 	offset = 0,
 	scale = 1,
-	spread = {x=512, y=256, z=512},
+	spread = {x=512, y=512, z=512},
 	seed = -188900,
-	octaves = 2,
-	persist = 0.33
-}
-
--- 3D noise for flora
-
-local np_flora = {
-	offset = 0,
-	scale = 1,
-	spread = {x=256, y=256, z=256},
-	seed = 188,
-	octaves = 2,
+	octaves = 3,
 	persist = 0.5
 }
 
@@ -80,10 +77,10 @@ local np_flora = {
 local np_cloud = {
 	offset = 0,
 	scale = 1,
-	spread = {x=26, y=26, z=26},
+	spread = {x=414, y=414, z=414},
 	seed = 1313131313,
-	octaves = 2,
-	persist = 0.67
+	octaves = 4,
+	persist = 0.8
 }
 
 -- Stuff
@@ -129,6 +126,8 @@ minetest.register_on_generated(function(minp, maxp, seed)
 	local c_stocopp = minetest.get_content_id("default:stone_with_copper")
 	local c_stoiron = minetest.get_content_id("default:stone_with_iron")
 	local c_stocoal = minetest.get_content_id("default:stone_with_coal")
+	local c_grass5 = minetest.get_content_id("default:grass_5")
+	local c_dryshrub = minetest.get_content_id("default:dry_shrub")
 	
 	local sidelen = x1 - x0 + 1
 	local chulens = {x=sidelen, y=sidelen+2, z=sidelen}
@@ -138,7 +137,6 @@ minetest.register_on_generated(function(minp, maxp, seed)
 	local nvals_terralt = minetest.get_perlin_map(np_terralt, chulens):get3dMap_flat(minposxyz)
 	local nvals_fissure = minetest.get_perlin_map(np_fissure, chulens):get3dMap_flat(minposxyz)
 	local nvals_biome = minetest.get_perlin_map(np_biome, chulens):get3dMap_flat(minposxyz)
-	local nvals_flora = minetest.get_perlin_map(np_flora, chulens):get3dMap_flat(minposxyz)
 	local nvals_cloud = minetest.get_perlin_map(np_cloud, chulens):get3dMap_flat(minposxyz)
 	
 	local ungen = false
@@ -155,7 +153,6 @@ minetest.register_on_generated(function(minp, maxp, seed)
 		local viu = area:index(x0, y-1, z)
 		for x = x0, x1 do
 			local si = x - x0 + 1
-			local n_flora = math.abs(nvals_flora[nixyz])
 			
 			local n_terrain = nvals_terrain[nixyz]
 			local n_terralt = nvals_terralt[nixyz]
@@ -242,33 +239,39 @@ minetest.register_on_generated(function(minp, maxp, seed)
 					end
 				elseif density < 0 and under[si] ~= 0 then -- air above surface node
 					if under[si] == 1 then
-						if math.random(PINCHA) == 2 and n_flora > TFOR then
+						if math.random() < PINCHA then
 							fracture_snowypine(x, y, z, area, data)
 						else
 							data[viu] = c_dirtsnow
 							data[vi] = c_snowblock
 						end
 					elseif under[si] == 2 then
-						if math.random(APPCHA) == 2 and n_flora > TFOR then
+						if math.random() < APPCHA then
 							fracture_appletree(x, y, z, area, data)
 						else
 							data[viu] = c_grass
+							if math.random() < FLOCHA then
+								fracture_flower(data, vi)
+							elseif math.random() < GRACHA then
+								data[vi] = c_grass5
+							end
 						end
 					elseif under[si] == 3 then
-						if math.random(CACCHA) == 2 and n_flora < TCAC then
+						if math.random() < CACCHA then
 							fracture_cactus(x, y, z, area, data)
+						elseif math.random() < DRYCHA then
+								data[vi] = c_dryshrub
 						end
 					end
 					stable[si] = 0
 					under[si] = 0
-				elseif density < 0 and y == y1 - 1 -- clouds, not underground
-				and chuy / 2 ~= math.floor(chuy / 2) then -- every odd chunk layer
+				elseif density < TSTONE and y - y0 == 40 and math.abs(y) > 1024 then -- clouds
 					local xrq = 16 * math.floor((x - x0) / 16)
 					local zrq = 16 * math.floor((z - z0) / 16)
-					local yrq = 79
+					local yrq = 40
+					--local yrq = 79
 					local qixyz = zrq * 6400 + yrq * 80 + xrq + 1
-					if math.abs(nvals_flora[qixyz]) < 0.1
-					and nvals_cloud[qixyz] >= 0 then
+					if math.abs(nvals_cloud[qixyz]) < 0.05 then
 						data[vi] = c_cloud
 					end
 					stable[si] = 0
