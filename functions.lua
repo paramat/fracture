@@ -34,8 +34,8 @@ function fracture_snowypine(x, y, z, area, data)
 	local c_pinetree = minetest.get_content_id("fracture:pinetree")
 	local c_needles = minetest.get_content_id("fracture:needles")
 	local c_snowblock = minetest.get_content_id("default:snowblock")
-	for j = -4, 14 do
-		if j == 3 or j == 6 or j == 9 or j == 12 then
+	for j = -2, 8 do
+		if j == 3 or j == 6 then
 			for i = -2, 2 do
 			for k = -2, 2 do
 				if math.abs(i) == 2 or math.abs(k) == 2 then
@@ -48,7 +48,7 @@ function fracture_snowypine(x, y, z, area, data)
 				end
 			end
 			end
-		elseif j == 4 or j == 7 or j == 10 then
+		elseif j == 4 then
 			for i = -1, 1 do
 			for k = -1, 1 do
 				if not (i == 0 and j == 0) then
@@ -61,7 +61,7 @@ function fracture_snowypine(x, y, z, area, data)
 				end
 			end
 			end
-		elseif j == 13 then
+		elseif j == 7 then
 			for i = -1, 1 do
 			for k = -1, 1 do
 				if not (i == 0 and j == 0) then
@@ -78,9 +78,9 @@ function fracture_snowypine(x, y, z, area, data)
 		local vi = area:index(x, y + j, z)
 		data[vi] = c_pinetree
 	end
-	local vi = area:index(x, y + 15, z)
-	local via = area:index(x, y + 16, z)
-	local viaa = area:index(x, y + 17, z)
+	local vi = area:index(x, y + 9, z)
+	local via = area:index(x, y + 10, z)
+	local viaa = area:index(x, y + 11, z)
 	data[vi] = c_needles
 	data[via] = c_needles
 	data[viaa] = c_snowblock
@@ -135,6 +135,7 @@ if SINGLENODE then
 	function spawnplayer(player)
 		local DENOFF = -0.4
 		local TSTONE = 0.03
+		local SCAT = 16 -- Player scatter from world centre in chunks (80 nodes).
 		local xsp
 		local ysp
 		local zsp
@@ -156,9 +157,9 @@ if SINGLENODE then
 		}
 		for chunk = 1, 64 do
 			print ("[fracture] searching for spawn "..chunk)
-			local x0 = 80 * math.random(-16, 16) - 32
-			local z0 = 80 * math.random(-16, 16) - 32
-			local y0 = 80 * math.random(-16, 16) - 32
+			local x0 = 80 * math.random(-SCAT, SCAT) - 32
+			local z0 = 80 * math.random(-SCAT, SCAT) - 32
+			local y0 = 80 * math.random(-SCAT, SCAT) - 32
 			local x1 = x0 + 79
 			local z1 = z0 + 79
 			local y1 = y0 + 79
@@ -214,3 +215,51 @@ if SINGLENODE then
 		return true
 	end)
 end
+
+-- ABM
+
+-- Appletree sapling
+
+minetest.register_abm({
+	nodenames = {"fracture:appling"},
+	interval = 31,
+	chance = 5,
+	action = function(pos, node)
+		local x = pos.x
+		local y = pos.y
+		local z = pos.z
+		local vm = minetest.get_voxel_manip()
+		local pos1 = {x=x-2, y=y-2, z=z-2}
+		local pos2 = {x=x+2, y=y+4, z=z+2}
+		local emin, emax = vm:read_from_map(pos1, pos2)
+		local area = VoxelArea:new({MinEdge=emin, MaxEdge=emax})
+		local data = vm:get_data()
+		fracture_appletree(x, y, z, area, data)
+		vm:set_data(data)
+		vm:write_to_map()
+		vm:update_map()
+	end,
+})
+
+-- Pine sapling
+
+minetest.register_abm({
+	nodenames = {"fracture:pineling"},
+	interval = 2,
+	chance = 5,
+	action = function(pos, node)
+		local x = pos.x
+		local y = pos.y
+		local z = pos.z
+		local vm = minetest.get_voxel_manip()
+		local pos1 = {x=x-2, y=y-2, z=z-2}
+		local pos2 = {x=x+2, y=y+11, z=z+2}
+		local emin, emax = vm:read_from_map(pos1, pos2)
+		local area = VoxelArea:new({MinEdge=emin, MaxEdge=emax})
+		local data = vm:get_data()
+		fracture_snowypine(x, y, z, area, data)
+		vm:set_data(data)
+		vm:write_to_map()
+		vm:update_map()
+	end,
+})

@@ -21,17 +21,27 @@ minetest.register_node("fracture:dirt", {
 	groups = {crumbly=3,soil=1},
 	drop = "default:dirt",
 	sounds = default.node_sound_dirt_defaults(),
+	soil = {
+		base = "fracture:dirt",
+		dry = "farming:soil",
+		wet = "farming:soil_wet"
+	}
 })
 
 minetest.register_node("fracture:dirtsnow", {
 	description = "Dirt with Snow",
 	tiles = {"default_snow.png", "default_dirt.png", "default_snow.png"},
 	is_ground_content = true,
-	groups = {crumbly=3},
+	groups = {crumbly=3,soil=1},
 	drop = "default:dirt",
 	sounds = default.node_sound_dirt_defaults({
 		footstep = {name="default_snow_footstep", gain=0.25},
 	}),
+	soil = {
+		base = "fracture:dirtsnow",
+		dry = "farming:soil",
+		wet = "farming:soil_wet"
+	}
 })
 
 minetest.register_node("fracture:grass", {
@@ -43,6 +53,11 @@ minetest.register_node("fracture:grass", {
 	sounds = default.node_sound_dirt_defaults({
 		footstep = {name="default_grass_footstep", gain=0.25},
 	}),
+	soil = {
+		base = "fracture:grass",
+		dry = "farming:soil",
+		wet = "farming:soil_wet"
+	}
 })
 
 minetest.register_node("fracture:appleleaf", {
@@ -53,6 +68,30 @@ minetest.register_node("fracture:appleleaf", {
 	paramtype = "light",
 	is_ground_content = false,
 	groups = {snappy=3, flammable=2},
+	drop = {
+		max_items = 1,
+		items = {
+			{items = {"fracture:appling"},rarity = 20},
+			{items = {"fracture:appleleaf"}}
+		}
+	},
+	sounds = default.node_sound_leaves_defaults(),
+})
+
+minetest.register_node("fracture:appling", {
+	description = "Appletree Sapling",
+	drawtype = "plantlike",
+	visual_scale = 1.0,
+	tiles = {"default_sapling.png"},
+	inventory_image = "default_sapling.png",
+	wield_image = "default_sapling.png",
+	paramtype = "light",
+	walkable = false,
+	selection_box = {
+		type = "fixed",
+		fixed = {-0.3, -0.5, -0.3, 0.3, 0.35, 0.3}
+	},
+	groups = {snappy=2,dig_immediate=3,flammable=2,attached_node=1},
 	sounds = default.node_sound_leaves_defaults(),
 })
 
@@ -64,6 +103,23 @@ minetest.register_node("fracture:pinetree", {
 	groups = {tree=1,choppy=2,oddly_breakable_by_hand=1,flammable=2},
 	sounds = default.node_sound_wood_defaults(),
 	on_place = minetest.rotate_node
+})
+
+minetest.register_node("fracture:pineling", {
+	description = "Pine Sapling",
+	drawtype = "plantlike",
+	visual_scale = 1.0,
+	tiles = {"fracture_pineling.png"},
+	inventory_image = "fracture_pineling.png",
+	wield_image = "fracture_pineling.png",
+	paramtype = "light",
+	walkable = false,
+	selection_box = {
+		type = "fixed",
+		fixed = {-0.3, -0.5, -0.3, 0.3, 0.35, 0.3}
+	},
+	groups = {snappy=2,dig_immediate=3,flammable=2,attached_node=1},
+	sounds = default.node_sound_leaves_defaults(),
 })
 
 minetest.register_node("fracture:pinewood", {
@@ -81,6 +137,13 @@ minetest.register_node("fracture:needles", {
 	paramtype = "light",
 	is_ground_content = false,
 	groups = {snappy=3},
+	drop = {
+		max_items = 1,
+		items = {
+			{items = {"fracture:pineling"},rarity = 20},
+			{items = {"fracture:needles"}}
+		}
+	},
 	sounds = default.node_sound_leaves_defaults(),
 })
 

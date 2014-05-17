@@ -1,31 +1,30 @@
--- fracture 0.1.5 by paramat
+-- fracture 0.1.6 by paramat
 -- For latest stable Minetest and back to 0.4.8
 -- Depends default
 -- License: code WTFPL
 
--- re-enable core clouds in singlenode mode
--- add pinetree, pinewood, flowers, grasses
--- remove flora noise
--- 4 octaves, detail to 25n
--- TODO
--- saplings
+-- stone drops cobble
+-- soil depth table, soil as deep as roots for tree
+-- saplings grown by voxelmanip
+-- new noise parameters
+-- smaller pines
 
 -- Parameters
 
 local YMIN = -33000 -- Set to -33000 when using singlenode option
 local YMAX = 33000
 local DENOFF = -0.4 -- Density offset, -2 to 2, 0 = equal volumes of air and floatland
-local TSTONE = 0.03 -- Stone density threshold, controls average depth of stone below surface
-local TVOID = 0.2 -- Central void threshold, controls size
+local TSTONE = 0.02 -- Stone density threshold, controls average depth of dirt
+local TVOID = 0.4 -- Central void threshold, controls size
 local TFIS = 0.02 -- Fissure threshold, controls width
 local ORECHA = 1 / 5 ^ 3 -- Ore chance per stone node
 
 local BLEND = 0.02 -- Controls biome blend distance
-local PINCHA = 1 / 13 ^ 2 -- Pine chance 1/x chance per surface node
-local APPCHA = 1 / 13 ^ 2 -- Appletree
+local PINCHA = 1 / 11 ^ 2 -- Pine chance per surface node
+local APPCHA = 1 / 11 ^ 2 -- Appletree
 local CACCHA = 1 / 61 ^ 2 -- Cactus
 local FLOCHA = 1 / 23 ^ 2 -- Random flower
-local GRACHA = 1 / 5 ^ 2 -- Grass_5
+local GRACHA = 1 / 6 ^ 2 -- Grass_5
 local DRYCHA = 1 / 47 ^ 2 -- Dry shrub
 
 -- 3D noise for terrain
@@ -33,9 +32,9 @@ local DRYCHA = 1 / 47 ^ 2 -- Dry shrub
 local np_terrain = {
 	offset = 0,
 	scale = 1,
-	spread = {x=256, y=128, z=256},
+	spread = {x=384, y=128, z=384},
 	seed = 593,
-	octaves = 4,
+	octaves = 5,
 	persist = 0.67
 }
 
@@ -44,9 +43,9 @@ local np_terrain = {
 local np_terralt = {
 	offset = 0,
 	scale = 1,
-	spread = {x=207, y=104, z=207},
+	spread = {x=237, y=79, z=237},
 	seed = 593,
-	octaves = 4,
+	octaves = 5,
 	persist = 0.67
 }
 
@@ -55,7 +54,7 @@ local np_terralt = {
 local np_fissure = {
 	offset = 0,
 	scale = 1,
-	spread = {x=128, y=256, z=128},
+	spread = {x=192, y=192, z=192},
 	seed = 2001,
 	octaves = 4,
 	persist = 0.5
@@ -68,7 +67,7 @@ local np_biome = {
 	scale = 1,
 	spread = {x=512, y=512, z=512},
 	seed = -188900,
-	octaves = 3,
+	octaves = 2,
 	persist = 0.5
 }
 
@@ -147,6 +146,7 @@ minetest.register_on_generated(function(minp, maxp, seed)
 	local nixyz = 1
 	local stable = {}
 	local under = {}
+	local soil = {}
 	for z = z0, z1 do
 	for y = y0 - 1, y1 + 1 do
 		local vi = area:index(x0, y, z)
@@ -176,6 +176,7 @@ minetest.register_on_generated(function(minp, maxp, seed)
 			
 			if y == y0 - 1 then -- overgeneration, initialise tables
 				under[si] = 0
+				soil[si] = 0
 				if ungen then
 					if density >= 0 then
 						stable[si] = 2
@@ -226,27 +227,31 @@ minetest.register_on_generated(function(minp, maxp, seed)
 					end
 					stable[si] = stable[si] + 1
 					under[si] = 0
+					soil[si] = 0
 				elseif density >= 0 and density < TSTONE and stable[si] >= 2 then -- fine materials
 					if biome == 3 then
 						data[vi] = c_desand
 						under[si] = 3
+						soil[si] = 0
 					elseif biome == 1 then
 						data[vi] = c_dirt
 						under[si] = 1
+						soil[si] = soil[si] + 1
 					else
 						data[vi] = c_dirt
 						under[si] = 2
+						soil[si] = soil[si] + 1
 					end
 				elseif density < 0 and under[si] ~= 0 then -- air above surface node
 					if under[si] == 1 then
-						if math.random() < PINCHA then
+						if math.random() < PINCHA and soil[si] >= 2 then
 							fracture_snowypine(x, y, z, area, data)
 						else
 							data[viu] = c_dirtsnow
 							data[vi] = c_snowblock
 						end
 					elseif under[si] == 2 then
-						if math.random() < APPCHA then
+						if math.random() < APPCHA and soil[si] >= 2 then
 							fracture_appletree(x, y, z, area, data)
 						else
 							data[viu] = c_grass
@@ -265,7 +270,9 @@ minetest.register_on_generated(function(minp, maxp, seed)
 					end
 					stable[si] = 0
 					under[si] = 0
-				elseif density < TSTONE and y - y0 == 40 and math.abs(y) > 1024 then -- clouds
+					soil[si] = 0
+				elseif density < TSTONE and y - y0 == 40
+				and biome ~= 3 and math.abs(y) > 1024 then -- clouds
 					local xrq = 16 * math.floor((x - x0) / 16)
 					local zrq = 16 * math.floor((z - z0) / 16)
 					local yrq = 40
@@ -276,9 +283,11 @@ minetest.register_on_generated(function(minp, maxp, seed)
 					end
 					stable[si] = 0
 					under[si] = 0
+					soil[si] = 0
 				else -- air
 					stable[si] = 0
 					under[si] = 0
+					soil[si] = 0
 				end
 			elseif y == y1 + 1 then -- overgeneration, detect surface, add surface nodes
 				if density < 0 and under[si] ~= 0 then
