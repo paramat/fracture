@@ -134,25 +134,25 @@ if SINGLENODE then
 
 	function spawnplayer(player)
 		local DENOFF = -0.4
-		local TSTONE = 0.03
-		local SCAT = 16 -- Player scatter from world centre in chunks (80 nodes).
+		local TSTONE = 0.02
+		local SCAT = 8 -- Player scatter from world centre in chunks (80 nodes).
 		local xsp
 		local ysp
 		local zsp
 		local np_terrain = {
 			offset = 0,
 			scale = 1,
-			spread = {x=256, y=128, z=256},
+			spread = {x=384, y=128, z=384},
 			seed = 593,
-			octaves = 4,
+			octaves = 5,
 			persist = 0.67
 		}
 		local np_terralt = {
 			offset = 0,
 			scale = 1,
-			spread = {x=207, y=104, z=207},
+			spread = {x=237, y=79, z=237},
 			seed = 593,
-			octaves = 4,
+			octaves = 5,
 			persist = 0.67
 		}
 		for chunk = 1, 64 do

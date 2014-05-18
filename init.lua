@@ -3,12 +3,6 @@
 -- Depends default
 -- License: code WTFPL
 
--- stone drops cobble
--- soil depth table, soil as deep as roots for tree
--- saplings grown by voxelmanip
--- new noise parameters
--- smaller pines
-
 -- Parameters
 
 local YMIN = -33000 -- Set to -33000 when using singlenode option
