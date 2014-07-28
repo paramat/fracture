@@ -1,6 +1,7 @@
 minetest.register_node("fracture:stone", {
 	description = "FR Stone",
 	tiles = {"default_stone.png"},
+	is_ground_content = false,
 	groups = {cracky=3},
 	drop = "default:cobble",
 	sounds = default.node_sound_stone_defaults(),
@@ -9,6 +10,7 @@ minetest.register_node("fracture:stone", {
 minetest.register_node("fracture:desertstone", {
 	description = "FR Desert Stone",
 	tiles = {"default_desert_stone.png"},
+	is_ground_content = false,
 	groups = {cracky=3},
 	drop = "default:desert_stone",
 	sounds = default.node_sound_stone_defaults(),
@@ -31,7 +33,7 @@ minetest.register_node("fracture:dirt", {
 minetest.register_node("fracture:dirtsnow", {
 	description = "Dirt with Snow",
 	tiles = {"default_snow.png", "default_dirt.png", "default_snow.png"},
-	is_ground_content = true,
+	is_ground_content = false,
 	groups = {crumbly=3,soil=1},
 	drop = "default:dirt",
 	sounds = default.node_sound_dirt_defaults({
@@ -87,6 +89,7 @@ minetest.register_node("fracture:appling", {
 	wield_image = "default_sapling.png",
 	paramtype = "light",
 	walkable = false,
+	is_ground_content = false,
 	selection_box = {
 		type = "fixed",
 		fixed = {-0.3, -0.5, -0.3, 0.3, 0.35, 0.3}
@@ -114,6 +117,7 @@ minetest.register_node("fracture:pineling", {
 	wield_image = "fracture_pineling.png",
 	paramtype = "light",
 	walkable = false,
+	is_ground_content = false,
 	selection_box = {
 		type = "fixed",
 		fixed = {-0.3, -0.5, -0.3, 0.3, 0.35, 0.3}

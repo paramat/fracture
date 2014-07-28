@@ -130,12 +130,12 @@ if SINGLENODE then
 		minetest.set_mapgen_params({mgname="singlenode", water_level=-32000})
 	end)
 
-	-- Spawn player
+	-- Spawn player. Dependant on chunk size = 5 mapblocks
 
 	function spawnplayer(player)
 		local DENOFF = -0.4
 		local TSTONE = 0.02
-		local SCAT = 8 -- Player scatter from world centre in chunks (80 nodes).
+		local PSCA = 8 -- Player scatter from world centre in chunks (80 nodes).
 		local xsp
 		local ysp
 		local zsp
@@ -157,9 +157,9 @@ if SINGLENODE then
 		}
 		for chunk = 1, 64 do
 			print ("[fracture] searching for spawn "..chunk)
-			local x0 = 80 * math.random(-SCAT, SCAT) - 32
-			local z0 = 80 * math.random(-SCAT, SCAT) - 32
-			local y0 = 80 * math.random(-SCAT, SCAT) - 32
+			local x0 = 80 * math.random(-PSCA, PSCA) - 32
+			local z0 = 80 * math.random(-PSCA, PSCA) - 32
+			local y0 = 80 * math.random(-PSCA, PSCA) - 32
 			local x1 = x0 + 79
 			local z1 = z0 + 79
 			local y1 = y0 + 79

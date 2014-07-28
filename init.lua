@@ -1,7 +1,9 @@
--- fracture 0.1.6 by paramat
+-- fracture 0.1.7 by paramat
 -- For latest stable Minetest and back to 0.4.8
 -- Depends default
 -- License: code WTFPL
+
+-- use LVM for 'ungen' check, scanning chunk below
 
 -- Parameters
 
@@ -122,7 +124,8 @@ minetest.register_on_generated(function(minp, maxp, seed)
 	local c_grass5 = minetest.get_content_id("default:grass_5")
 	local c_dryshrub = minetest.get_content_id("default:dry_shrub")
 	
-	local sidelen = x1 - x0 + 1
+	local sidelen = x1 - x0 + 1 -- mapchunk side length
+	local facearea = sidelen ^ 2 -- mapchunk face area
 	local chulens = {x=sidelen, y=sidelen+2, z=sidelen}
 	local minposxyz = {x=x0, y=y0-1, z=z0}
 	
@@ -132,10 +135,8 @@ minetest.register_on_generated(function(minp, maxp, seed)
 	local nvals_biome = minetest.get_perlin_map(np_biome, chulens):get3dMap_flat(minposxyz)
 	local nvals_cloud = minetest.get_perlin_map(np_cloud, chulens):get3dMap_flat(minposxyz)
 	
-	local ungen = false
-	if minetest.get_node({x=x0, y=y0-1, z=z0}).name == "ignore" then
-		ungen = true
-	end
+	local viu = area:index(x0, y0-1, z0) -- ungenerated chunk below?
+	local ungen = data[viu] == c_ignore
 	
 	local nixyz = 1
 	local stable = {}
@@ -178,20 +179,20 @@ minetest.register_on_generated(function(minp, maxp, seed)
 						stable[si] = 0
 					end
 				else
-					local nodename = minetest.get_node({x=x,y=y,z=z}).name
-					if nodename == "fracture:stone"
-					or nodename == "fracture:desertstone"
-					or nodename == "fracture:dirt"
-					or nodename == "fracture:grass"
-					or nodename == "fracture:dirtsnow"
-					or nodename == "default:snowblock"
-					or nodename == "default:desert_sand"
-					or nodename == "default:stone_with_diamond"
-					or nodename == "default:stone_with_mese"
-					or nodename == "default:stone_with_gold"
-					or nodename == "default:stone_with_copper"
-					or nodename == "default:stone_with_iron"
-					or nodename == "default:stone_with_coal" then
+					local nodid = data[vi]
+					if nodid == c_stone
+					or nodid == c_destone
+					or nodid == c_dirt
+					or nodid == c_grass
+					or nodid == c_dirtsnow
+					or nodid == c_snowblock
+					or nodid == c_desand
+					or nodid == c_stodiam
+					or nodid == c_stomese
+					or nodid == c_stogold
+					or nodid == c_stocopp
+					or nodid == c_stoiron
+					or nodid == c_stocoal then
 						stable[si] = 2
 					else
 						stable[si] = 0
@@ -270,8 +271,7 @@ minetest.register_on_generated(function(minp, maxp, seed)
 					local xrq = 16 * math.floor((x - x0) / 16)
 					local zrq = 16 * math.floor((z - z0) / 16)
 					local yrq = 40
-					--local yrq = 79
-					local qixyz = zrq * 6400 + yrq * 80 + xrq + 1
+					local qixyz = zrq * facearea + yrq * sidelen + xrq + 1
 					if math.abs(nvals_cloud[qixyz]) < 0.05 then
 						data[vi] = c_cloud
 					end
