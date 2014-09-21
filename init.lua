@@ -1,27 +1,40 @@
--- fracture 0.1.7 by paramat
+-- fracture 0.2.0 by paramat
 -- For latest stable Minetest and back to 0.4.8
 -- Depends default
 -- License: code WTFPL
 
--- use LVM for 'ungen' check, scanning chunk below
+-- 3D realm noise for xl scale web realm structure
+-- TODO
+-- vary tree, grass, flower density
+-- integrate water pools
 
 -- Parameters
 
-local YMIN = -33000 -- Set to -33000 when using singlenode option
+local YMIN = -32 -- Set to -33000 when using singlenode option
 local YMAX = 33000
-local DENOFF = -0.4 -- Density offset, -2 to 2, 0 = equal volumes of air and floatland
 local TSTONE = 0.02 -- Stone density threshold, controls average depth of dirt
 local TVOID = 0.4 -- Central void threshold, controls size
 local TFIS = 0.02 -- Fissure threshold, controls width
 local ORECHA = 1 / 5 ^ 3 -- Ore chance per stone node
 
 local BLEND = 0.02 -- Controls biome blend distance
-local PINCHA = 1 / 11 ^ 2 -- Pine chance per surface node
-local APPCHA = 1 / 11 ^ 2 -- Appletree
+local PINCHA = 1 / 13 ^ 2 -- Pine chance per surface node
+local APPCHA = 1 / 13 ^ 2 -- Appletree
 local CACCHA = 1 / 61 ^ 2 -- Cactus
 local FLOCHA = 1 / 23 ^ 2 -- Random flower
 local GRACHA = 1 / 6 ^ 2 -- Grass_5
 local DRYCHA = 1 / 47 ^ 2 -- Dry shrub
+
+-- 3D noise for realm
+
+local np_realm = {
+	offset = 0,
+	scale = 1,
+	spread = {x=4096, y=4096, z=4096},
+	seed = 98320,
+	octaves = 3,
+	persist = 0.4
+}
 
 -- 3D noise for terrain
 
@@ -34,12 +47,12 @@ local np_terrain = {
 	persist = 0.67
 }
 
--- 3D noise for alt terrain
+-- 3D noise for alt terrain in golden ratio
 
 local np_terralt = {
 	offset = 0,
 	scale = 1,
-	spread = {x=237, y=79, z=237},
+	spread = {x=621, y=207, z=621},
 	seed = 593,
 	octaves = 5,
 	persist = 0.67
@@ -131,6 +144,7 @@ minetest.register_on_generated(function(minp, maxp, seed)
 	
 	local nvals_terrain = minetest.get_perlin_map(np_terrain, chulens):get3dMap_flat(minposxyz)
 	local nvals_terralt = minetest.get_perlin_map(np_terralt, chulens):get3dMap_flat(minposxyz)
+	local nvals_realm = minetest.get_perlin_map(np_realm, chulens):get3dMap_flat(minposxyz)
 	local nvals_fissure = minetest.get_perlin_map(np_fissure, chulens):get3dMap_flat(minposxyz)
 	local nvals_biome = minetest.get_perlin_map(np_biome, chulens):get3dMap_flat(minposxyz)
 	local nvals_cloud = minetest.get_perlin_map(np_cloud, chulens):get3dMap_flat(minposxyz)
@@ -151,7 +165,8 @@ minetest.register_on_generated(function(minp, maxp, seed)
 			
 			local n_terrain = nvals_terrain[nixyz]
 			local n_terralt = nvals_terralt[nixyz]
-			local density = (n_terrain + n_terralt) * 0.5 + DENOFF
+			local n_realm = nvals_realm[nixyz]
+			local density = (n_terrain + n_terralt) * 0.5 - math.abs(n_realm) * 3
 			
 			local n_biome = nvals_biome[nixyz]
 			local biome = false

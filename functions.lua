@@ -123,7 +123,7 @@ end
 
 -- Singlenode option
 
-local SINGLENODE = true
+local SINGLENODE = false
 
 if SINGLENODE then
 	minetest.register_on_mapgen_init(function(mgparams)
