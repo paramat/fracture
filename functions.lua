@@ -30,62 +30,6 @@ function fracture_appletree(x, y, z, area, data)
 	end
 end
 
-function fracture_snowypine(x, y, z, area, data)
-	local c_pinetree = minetest.get_content_id("fracture:pinetree")
-	local c_needles = minetest.get_content_id("fracture:needles")
-	local c_snowblock = minetest.get_content_id("default:snowblock")
-	for j = -2, 8 do
-		if j == 3 or j == 6 then
-			for i = -2, 2 do
-			for k = -2, 2 do
-				if math.abs(i) == 2 or math.abs(k) == 2 then
-					if math.random(7) ~= 2 then
-						local vi = area:index(x + i, y + j, z + k)
-						data[vi] = c_needles
-						local via = area:index(x + i, y + j + 1, z + k)
-						data[via] = c_snowblock
-					end
-				end
-			end
-			end
-		elseif j == 4 then
-			for i = -1, 1 do
-			for k = -1, 1 do
-				if not (i == 0 and j == 0) then
-					if math.random(11) ~= 2 then
-						local vi = area:index(x + i, y + j, z + k)
-						data[vi] = c_needles
-						local via = area:index(x + i, y + j + 1, z + k)
-						data[via] = c_snowblock
-					end
-				end
-			end
-			end
-		elseif j == 7 then
-			for i = -1, 1 do
-			for k = -1, 1 do
-				if not (i == 0 and j == 0) then
-					local vi = area:index(x + i, y + j, z + k)
-					data[vi] = c_needles
-					local via = area:index(x + i, y + j + 1, z + k)
-					data[via] = c_needles
-					local viaa = area:index(x + i, y + j + 2, z + k)
-					data[viaa] = c_snowblock
-				end
-			end
-			end
-		end
-		local vi = area:index(x, y + j, z)
-		data[vi] = c_pinetree
-	end
-	local vi = area:index(x, y + 9, z)
-	local via = area:index(x, y + 10, z)
-	local viaa = area:index(x, y + 11, z)
-	data[vi] = c_needles
-	data[via] = c_needles
-	data[viaa] = c_snowblock
-end
-
 function fracture_cactus(x, y, z, area, data)
 	local c_cactus = minetest.get_content_id("fracture:cactus")
 	for j = -2, 4 do
@@ -133,12 +77,19 @@ if SINGLENODE then
 	-- Spawn player. Dependant on chunk size = 5 mapblocks
 
 	function spawnplayer(player)
-		local DENOFF = -0.4
 		local TSTONE = 0.02
-		local PSCA = 8 -- Player scatter from world centre in chunks (80 nodes).
+		local PSCA = 26 -- Player scatter from world centre in chunks (80 nodes).
 		local xsp
 		local ysp
 		local zsp
+		local np_realm = {
+			offset = 0,
+			scale = 1,
+			spread = {x=8192, y=8192, z=8192},
+			seed = 98320,
+			octaves = 3,
+			persist = 0.4
+		}
 		local np_terrain = {
 			offset = 0,
 			scale = 1,
@@ -150,12 +101,12 @@ if SINGLENODE then
 		local np_terralt = {
 			offset = 0,
 			scale = 1,
-			spread = {x=237, y=79, z=237},
+			spread = {x=621, y=207, z=621},
 			seed = 593,
 			octaves = 5,
 			persist = 0.67
 		}
-		for chunk = 1, 64 do
+		for chunk = 1, 128 do
 			print ("[fracture] searching for spawn "..chunk)
 			local x0 = 80 * math.random(-PSCA, PSCA) - 32
 			local z0 = 80 * math.random(-PSCA, PSCA) - 32
@@ -168,6 +119,7 @@ if SINGLENODE then
 			local chulens = {x=sidelen, y=sidelen, z=sidelen}
 			local minposxyz = {x=x0, y=y0, z=z0}
 
+			local nvals_realm = minetest.get_perlin_map(np_realm, chulens):get3dMap_flat(minposxyz)
 			local nvals_terrain = minetest.get_perlin_map(np_terrain, chulens):get3dMap_flat(minposxyz)
 			local nvals_terralt = minetest.get_perlin_map(np_terralt, chulens):get3dMap_flat(minposxyz)
 	
@@ -177,9 +129,11 @@ if SINGLENODE then
 				for y = y0, y1 do
 					for x = x0, x1 do
 						local si = x - x0 + 1
+						local n_realm = nvals_realm[nixyz]
 						local n_terrain = nvals_terrain[nixyz]
 						local n_terralt = nvals_terralt[nixyz]
-						local density = (n_terrain + n_terralt) * 0.5 + DENOFF
+						local density = (n_terrain + n_terralt) * 0.5 - math.abs(n_realm) ^ 1.5 * 64
+
 						if density >= TSTONE then
 							stable[si] = true
 						elseif stable[si] and density < 0 then
@@ -241,25 +195,3 @@ minetest.register_abm({
 	end,
 })
 
--- Pine sapling
-
-minetest.register_abm({
-	nodenames = {"fracture:pineling"},
-	interval = 2,
-	chance = 5,
-	action = function(pos, node)
-		local x = pos.x
-		local y = pos.y
-		local z = pos.z
-		local vm = minetest.get_voxel_manip()
-		local pos1 = {x=x-2, y=y-2, z=z-2}
-		local pos2 = {x=x+2, y=y+11, z=z+2}
-		local emin, emax = vm:read_from_map(pos1, pos2)
-		local area = VoxelArea:new({MinEdge=emin, MaxEdge=emax})
-		local data = vm:get_data()
-		fracture_snowypine(x, y, z, area, data)
-		vm:set_data(data)
-		vm:write_to_map()
-		vm:update_map()
-	end,
-})
